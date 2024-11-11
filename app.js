@@ -1,82 +1,32 @@
-// Импортируем фреймворк Express для создания веб-сервера
+// app.js
 const express = require("express");
-
-// Импортируем модуль для работы с файловой системой (чтение и запись файлов)
-const fs = require("fs");
-
-// Импортируем модуль для управления путями файлов и директорий
+const bookRoutes = require("./routes/bookRoutes");
+const swaggerUi = require("swagger-ui-express");
+const swaggerJsDoc = require("swagger-jsdoc");
 const path = require("path");
 
-// Импортируем модуль для парсинга CSV файлов и их преобразования в объекты
-const csv = require("csv-parser");
-
-// Создаем экземпляр приложения Express
 const app = express();
-
-// Разрешаем серверу обрабатывать JSON-данные в запросах
 app.use(express.json());
-
-// Указываем, что статические файлы находятся в папке "public"
 app.use(express.static("public"));
 
-let books = [];
-let cart = [];
+// Swagger setup
+const swaggerOptions = {
+	swaggerDefinition: {
+		openapi: "3.0.0",
+		info: {
+			title: "Книжный магазин API",
+			version: "1.0.0",
+			description: "API для управления книжным магазином",
+		},
+	},
+	apis: ["./controllers/*.js"],
+};
 
-// Загрузка данных книг из CSV
-function loadBooks() {
-	return new Promise((resolve, reject) => {
-		const results = [];
-		fs.createReadStream("books.csv")
-			.pipe(csv())
-			.on("data", (data) => results.push(data))
-			.on("end", () => {
-				books = results.map((book) => ({
-					id: parseInt(book.id),
-					title: book.title,
-					author: book.author,
-					price: parseFloat(book.price),
-				}));
-				resolve();
-			})
-			.on("error", reject);
-	});
-}
+const swaggerDocs = swaggerJsDoc(swaggerOptions);
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
-// Эндпоинт для получения списка книг
-app.get("/books", async (req, res) => {
-	if (books.length === 0) await loadBooks();
-	res.json(books);
-});
-
-// Эндпоинт для добавления в корзину
-app.post("/cart", (req, res) => {
-	const { id } = req.body;
-	const book = books.find((b) => b.id === id);
-	if (book) {
-		cart.push(book);
-		res.status(201).json({ message: "Книга добавлена в корзину" });
-	} else {
-		res.status(404).json({ message: "Книга не найдена" });
-	}
-});
-
-// Эндпоинт для удаления из корзины
-app.delete("/cart/:id", (req, res) => {
-	const id = parseInt(req.params.id);
-	const bookIndex = cart.findIndex((b) => b.id === id);
-	if (bookIndex !== -1) {
-		cart.splice(bookIndex, 1);
-		res.json({ message: "Книга удалена из корзины" });
-	} else {
-		res.status(404).json({ message: "Книга не найдена в корзине" });
-	}
-});
-
-// Эндпоинт для получения суммы корзины
-app.get("/cart/total", (req, res) => {
-	const total = cart.reduce((sum, book) => sum + book.price, 0);
-	res.json({ total });
-});
+// Используем маршруты
+app.use("/books", bookRoutes);
 
 const PORT = 3000;
 app.listen(PORT, () => {

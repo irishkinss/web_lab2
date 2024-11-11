@@ -1,43 +1,41 @@
-document.addEventListener("DOMContentLoaded", async () => {
-	const booksBody = document.getElementById("booksBody");
-	const totalPriceElement = document.getElementById("totalPrice");
-	let totalPrice = 0;
+// public/cart.js
+let cart = [];
 
-	// Загрузка списка книг
-	const response = await fetch("/books");
-	const books = await response.json();
+function addToCart(bookId) {
+	fetch("/books/cart", {
+		method: "POST",
+		headers: {
+			"Content-Type": "application/json",
+		},
+		body: JSON.stringify({ id: bookId }),
+	})
+		.then((response) => response.json())
+		.then((data) => {
+			alert(data.message);
+			updateCartTotal();
+		})
+		.catch((error) => console.error("Ошибка:", error));
+}
 
-	try {
-		// Загрузка списка книг с сервера
-		const response = await fetch("/books");
-		const books = await response.json();
+function removeFromCart(bookId) {
+	fetch(`/books/cart/${bookId}`, {
+		method: "DELETE",
+	})
+		.then((response) => response.json())
+		.then((data) => {
+			alert(data.message);
+			updateCartTotal();
+		})
+		.catch((error) => console.error("Ошибка:", error));
+}
 
-		// Отображение книг в таблице
-		books.forEach((book) => {
-			const row = document.createElement("tr");
-			row.innerHTML = `
-        <td>${book.title}</td>
-        <td>${book.author}</td>
-        <td>${book.price} руб.</td>
-        <td>
-          <button onclick="addToCart(${book.id}, ${book.price})">Добавить в корзину</button>
-		  <button onclick="removeFromCart(${book.id}, ${book.price})">Удалить из корзины</button>
-        </td>
-      `;
-			booksBody.appendChild(row);
-		});
-	} catch (error) {
-		console.error("Ошибка при загрузке книг:", error);
-	}
-
-	// Добавить в корзину
-	window.addToCart = (id, price) => {
-		totalPrice += price;
-		totalPriceElement.textContent = `Итоговая сумма: ${totalPrice} руб.`;
-	};
-
-	window.removeFromCart = (id, price) => {
-		totalPrice -= price;
-		totalPriceElement.textContent = `Итоговая сумма: ${totalPrice} руб.`;
-	};
-});
+function updateCartTotal() {
+	fetch("/books/cart/total")
+		.then((response) => response.json())
+		.then((data) => {
+			document.getElementById(
+				"totalPrice"
+			).innerText = `Итоговая сумма: ${data.total} руб.`;
+		})
+		.catch((error) => console.error("Ошибка:", error));
+}
