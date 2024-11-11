@@ -21,6 +21,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         <td>${book.price} руб.</td>
         <td>
           <button onclick="addToCart(${book.id}, ${book.price})">Добавить в корзину</button>
+		  <button onclick="removeFromCart(${book.id}, ${book.price})">Удалить из корзины</button>
         </td>
       `;
 			booksBody.appendChild(row);
@@ -32,6 +33,11 @@ document.addEventListener("DOMContentLoaded", async () => {
 	// Добавить в корзину
 	window.addToCart = (id, price) => {
 		totalPrice += price;
+		totalPriceElement.textContent = `Итоговая сумма: ${totalPrice} руб.`;
+	};
+
+	window.removeFromCart = (id, price) => {
+		totalPrice -= price;
 		totalPriceElement.textContent = `Итоговая сумма: ${totalPrice} руб.`;
 	};
 });
