@@ -1,10 +1,22 @@
+// Импортируем фреймворк Express для создания веб-сервера
 const express = require("express");
+
+// Импортируем модуль для работы с файловой системой (чтение и запись файлов)
 const fs = require("fs");
+
+// Импортируем модуль для управления путями файлов и директорий
 const path = require("path");
+
+// Импортируем модуль для парсинга CSV файлов и их преобразования в объекты
 const csv = require("csv-parser");
 
+// Создаем экземпляр приложения Express
 const app = express();
+
+// Разрешаем серверу обрабатывать JSON-данные в запросах
 app.use(express.json());
+
+// Указываем, что статические файлы находятся в папке "public"
 app.use(express.static("public"));
 
 let books = [];
@@ -37,7 +49,7 @@ app.get("/books", async (req, res) => {
 });
 
 // Эндпоинт для добавления в корзину
-app.post("/cart/add", (req, res) => {
+app.post("/cart", (req, res) => {
 	const { id } = req.body;
 	const book = books.find((b) => b.id === id);
 	if (book) {
@@ -49,8 +61,8 @@ app.post("/cart/add", (req, res) => {
 });
 
 // Эндпоинт для удаления из корзины
-app.post("/cart/remove", (req, res) => {
-	const { id } = req.body;
+app.delete("/cart/:id", (req, res) => {
+	const id = parseInt(req.params.id);
 	const bookIndex = cart.findIndex((b) => b.id === id);
 	if (bookIndex !== -1) {
 		cart.splice(bookIndex, 1);
